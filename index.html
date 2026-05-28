@@ -460,7 +460,7 @@
 
                 if (rows && Array.isArray(rows) && rows.length > 0) { 
                     currentFullData = rows;
-                    try { localStorage.setItem('mone_last_full_data', JSON.stringify(rows)); } catch(e){}
+                    // try { localStorage.setItem('mone_last_full_data', JSON.stringify(rows)); } catch(e){}
                     renderDashboard(rows); 
                 } else { 
                     throw new Error("Массив данных пуст"); 
