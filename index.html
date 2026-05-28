@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Арт-Студия Моне — Панель Управления v3.4</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+
+    <style>
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: #1E293B;
+            --text-main: #F8FAFC;
+            --text-sec: #94A3B8;
+            --vk-blue: #38BDF8;
+            --color-plan: #34D399;
+            --color-super: #FBBF24;
+            --color-mega: #A855F7;
+            --color-alert: #F87171;
+            --space-bg: linear-gradient(135deg, #0F172A 0%, #090D16 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--space-bg);
+            background-attachment: fixed;
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            transition: background 1.5s ease-in-out;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* ШАПКА С ЛОГОТИПОМ */
+        .header-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 20px;
+            gap: 20px;
+        }
+
+        .brand-block { display: flex; align-items: center; gap: 18px; }
+        .studio-logo {
+            height: 55px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
+        }
+
+        .header-panel h1 {
+            margin: 0; font-size: 24px; font-weight: 700;
+            background: linear-gradient(to right, #38BDF8, #A855F7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn {
+            color: var(--text-main); border: 1px solid #475569; padding: 10px 18px;
+            border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .refresh-btn { background: #334155; }
+        .predict-btn { background: linear-gradient(135deg, #6366F1, #A855F7); border: none; }
+        .faction-btn { background: linear-gradient(135deg, #EF4444, #3B82F6); border: none; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+        .faction-btn.active { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); border: 1px solid #FFF; }
+
+        /* ОБЩИЙ ПЛАН СТУДИИ */
+        .team-panel {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+            border: 2px solid #334155; border-radius: 20px; padding: 24px; margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .team-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .team-title { font-size: 16px; font-weight: 700; color: #38BDF8; letter-spacing: 0.5px; }
+        .team-sum { font-size: 24px; font-weight: 800; }
+
+        /* ИНТЕРФЕЙС БИТВЫ КЛАНОВ */
+        .faction-battle-arena {
+            display: none;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px dashed #475569;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .battle-vs-bar {
+            display: flex; height: 34px; border-radius: 17px; overflow: hidden;
+            border: 2px solid #334155; margin: 15px 0; position: relative; background: #000;
+        }
+        .side-left { background: linear-gradient(90deg, #F87171, #EF4444); transition: width 0.7s ease; width: 50%; display: flex; align-items: center; padding-left: 15px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .side-right { background: linear-gradient(90deg, #3B82F6, #60A5FA); transition: width 0.7s ease; width: 50%; display: flex; align-items: center; justify-content: flex-end; padding-right: 15px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .vs-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #1E293B; border: 2px solid #FFF; padding: 4px 10px; border-radius: 10px; font-weight: 900; font-size: 14px; z-index: 10; color: #FBBF24; }
+
+        .factions-container-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .faction-column { background: rgba(30, 41, 59, 0.4); border-radius: 20px; padding: 16px; border: 1px solid #334155; }
+        .faction-column.left-side { border-top: 4px solid #EF4444; }
+        .faction-column.right-side { border-top: 4px solid #3B82F6; }
+        .faction-name-header { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* СЕТКА КАРТОЧЕК СТАНДАРТНАЯ */
+        .managers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+
+        /* КАРТОЧКА МЕНЕДЖЕРА */
+        .m-card {
+            background: var(--bg-card); border: 1px solid #334155; border-radius: 20px; padding: 24px;
+            position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .m-card.on-fire { border-color: #F97316; animation: fireGlow 2s infinite alternate; }
+        @media (min-width: 821px) {
+            @keyframes fireGlow { 0% { box-shadow: 0 0 15px rgba(249,115,22,0.2); } 100% { box-shadow: 0 0 25px rgba(249,115,22,0.45); } }
+        }
+        
+        .m-card.status-plan { border-color: var(--color-plan); }
+        .m-card.status-super { border-color: var(--color-super); }
+        .m-card.status-mega { border-color: var(--color-mega); border-width: 2px; }
+
+        .m-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .badge-rank { background: #0F172A; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid var(--text-sec); display: inline-block; margin-top: 4px; }
+        .badge-intern { background: #312E81; color: #6366F1; border: 1px solid #4338CA; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 4px; }
+        .sales-sum { font-size: 26px; font-weight: 800; }
+
+        /* ШКАЛА ПРОГРЕССА С РАЗДЕЛИТЕЛЯМИ */
+        .timeline-container { position: relative; margin: 24px 0; }
+        .goals-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-sec); margin-bottom: 8px; position: relative; }
+        
+        .bar-wrapper { background: #0F172A; height: 16px; border-radius: 8px; overflow: hidden; border: 1px solid #334155; position: relative; }
+        .bar-progress-line { height: 100%; width: 0%; background: linear-gradient(90deg, var(--color-plan), var(--color-mega)); transition: width 1s ease-in-out; }
+
+        .bar-wrapper .grid-line { position: absolute; top: 0; bottom: 0; width: 2px; background-color: rgba(255, 255, 255, 0.15); z-index: 5; }
+        .bar-wrapper .grid-line-plan { left: 33.33%; border-left: 1px dashed var(--color-plan); }
+        .bar-wrapper .grid-line-super { left: 66.66%; border-left: 1px dashed var(--color-super); }
+
+        .target-status-box { background: #131F33; border-radius: 12px; padding: 12px; margin-top: 14px; font-size: 14px; display: flex; justify-content: space-between; border-left: 4px solid var(--vk-blue); }
+
+        /* МЕТРИКИ */
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+        .metric-box { background: #0F172A; border-radius: 12px; padding: 14px 10px; text-align: center; border: 1px solid #1E293B; position: relative; }
+        .metric-title { font-size: 10px; color: var(--text-sec); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .metric-value { font-size: 16px; font-weight: 700; }
+        .metric-sub { font-size: 9px; color: var(--text-sec); margin-top: 4px; display: block; }
+
+        .loader-zone { text-align: center; padding: 60px 20px; font-size: 20px; color: var(--text-sec); }
+        .status-logger {
+            max-width: 600px; margin: 20px auto; background: #1E293B; border: 1px solid #334155;
+            padding: 15px; border-radius: 10px; font-family: monospace; font-size: 13px; text-align: left;
+            color: #38BDF8; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        #achievement-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .achievement-toast {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 2px solid transparent; border-image: linear-gradient(to right, #34D399, #38BDF8) 1;
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.3); color: white; padding: 16px 24px; border-radius: 12px; min-width: 280px;
+            font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 14px; pointer-events: auto; animation: slideIn 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; position: relative;
+        }
+
+        @keyframes slideIn { 0% { transform: translateX(120%) scale(0.9); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
+        .achievement-toast.fade-out { animation: slideOut 0.5s ease forwards; }
+        @keyframes slideOut { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(120%); opacity: 0; } }
+        .toast-icon { font-size: 26px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #1E293B; border: 2px solid #A855F7; padding: 25px; border-radius: 20px; max-width: 400px; text-align: center; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* МОБИЛЬНЫЕ СТИЛИ */
+        @media (max-width: 820px) {
+            body { padding: 10px; }
+            .header-panel { flex-direction: column; align-items: center; text-align: center; gap: 14px; padding-bottom: 15px; }
+            .brand-block { flex-direction: column; gap: 8px; }
+            .action-btns { width: 100%; }
+            .btn { flex: 1; text-align: center; padding: 12px 10px; font-size: 13px; min-width: 100px; }
+            .team-panel { padding: 16px; border-radius: 16px; }
+            .team-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .factions-container-grid { grid-template-columns: 1fr; gap: 16px; }
+            .managers-grid { grid-template-columns: 1fr; gap: 16px; }
+            .m-card { padding: 16px; border-radius: 16px; }
+            .m-header { flex-direction: column; gap: 10px; margin-bottom: 14px; }
+            .m-header > div:last-child { text-align: left !important; margin-top: 5px; }
+            .sales-sum { font-size: 24px; }
+            .target-status-box { flex-direction: column; gap: 4px; font-size: 13px; }
+            #achievement-container { left: 10px; right: 10px; top: 10px; }
+            .achievement-toast { min-width: auto; width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="achievement-container"></div>
+
+    <div class="container">
+        <div class="header-panel">
+            <div class="brand-block">
+                <img src="Лого белый с каплей утвержден.jpg" alt="Моне Лого" class="studio-logo" onerror="this.style.display='none'">
+                <div>
+                    <h1>Арт-Студия Моне • Дашборд Продаж</h1>
+                    <div style="color: var(--text-sec); font-size: 13px; margin-top: 4px;">Синхронизация v3.4 • Адаптивный план для стажеров и сохранение архива выручки</div>
+                </div>
+            </div>
+            <div class="action-btns">
+                <button class="btn faction-btn" id="btn-toggle-battle" onclick="toggleFactionBattle()">⚔️ Битва Фракций</button>
+                <button class="btn predict-btn" onclick="showPrediction()">🔮 Предсказание</button>
+                <button class="btn refresh-btn" onclick="triggerRefresh()">🔄 Обновить</button>
+                <button class="btn" onclick="document.getElementById('lk-modal').style.display='flex'">🔑 ЛК</button>
+            </div>
+        </div>
+
+        <div class="team-panel">
+            <div class="team-header">
+                <div class="team-title">🚀 ПРОГРЕСС СТУДИИ (ВКЛЮЧАЯ АРХИВ)</div>
+                <div class="team-sum" id="lbl-team-sum">0 ₽</div>
+            </div>
+            <div class="timeline-container" style="margin: 12px 0;">
+                <div class="goals-labels">
+                    <span>Старт (0 ₽)</span>
+                    <span style="color: var(--color-plan);" id="lbl-team-p1">План (1.6M)</span>
+                    <span style="color: var(--color-super);" id="lbl-team-p2">Супер (2.5M)</span>
+                    <span style="color: var(--color-mega);" id="lbl-team-p3">Мега (3.5M)</span>
+                </div>
+                <div class="bar-wrapper" style="height: 20px; background: #090D16;">
+                    <div class="grid-line grid-line-plan"></div>
+                    <div class="grid-line grid-line-super"></div>
+                    <div class="bar-progress-line" id="bar-team-progress"></div>
+                </div>
+            </div>
+            <div style="font-size: 13px; text-align: right; color: var(--text-sec);" id="lbl-team-status">Синхронизация данных...</div>
+        </div>
+
+        <div class="faction-battle-arena" id="battle-arena">
+            <div style="text-align: center; font-weight: 800; color: #FBBF24; font-size: 14px; letter-spacing: 1px;">⚔️ ПРОТИВОСТОЯНИЕ СТРАНИЦ ПРОДАЖ ⚔️</div>
+            <div class="battle-vs-bar">
+                <div class="vs-badge">VS</div>
+                <div class="side-left" id="arena-bar-left">0 ₽</div>
+                <div class="side-right" id="arena-bar-right">0 ₽</div>
+            </div>
+            <div class="factions-container-grid">
+                <div class="faction-column left-side">
+                    <div class="faction-name-header" style="color: #F87171;">
+                        <span>🔴 Орден Авангарда (Лена / Ксения 🎓)</span>
+                        <span id="score-left" style="font-size: 18px;">0 ₽</span>
+                    </div>
+                    <div id="faction-left-slots" class="managers-grid" style="grid-template-columns: 1fr;"></div>
+                </div>
+                <div class="faction-column right-side">
+                    <div class="faction-name-header" style="color: #60A5FA;">
+                        <span>🔵 Союз Импрессионистов (Полина / Даша 🎓)</span>
+                        <span id="score-right" style="font-size: 18px;">0 ₽</span>
+                    </div>
+                    <div id="faction-right-slots" class="managers-grid" style="grid-template-columns: 1fr;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loader-screen" class="loader-zone">
+            <div style="margin-bottom: 15px;">🔮 Расчет космических пропорций Моне...</div>
+            <div class="status-logger" id="status-logger">
+                [SYSTEM]: Загрузка конфигурации персонала v3.4...<br>
+            </div>
+        </div>
+
+        <div id="dashboard-grid" class="managers-grid" style="display: none;"></div>
+    </div>
+
+    <div class="modal-overlay" id="predict-modal" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 style="color:#A855F7; margin-top:0;">🔮 Предсказание Моне</h3>
+            <div id="predict-content" style="font-style:italic; margin-bottom:20px;">Загрузка космических флюидов...</div>
+            <button class="btn refresh-btn" onclick="closeModal()">Принять</button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFL4cFp_2RV0mQHl0842uCitLSLqF6x1WkFr0Yndx45pmM-S36J9Nd1yUNopvZ6hL6/exec";
+        const URL_ENCODED = "https://api.steinhq.com/v1/storages/6a100f6492b1163e97f93664/%D0%9B%D0%B8%D1%81%D1%821";
+
+        // Стандартные константы плана для опытных сотрудников (из расчета нормы в 15 смен)
+        const BASE_SHIFTS_NORM = 15;
+        const GOAL_PLAN = 350000; const GOAL_SUPER = 550000; const GOAL_MEGA = 750000;
+        
+        const TEAM_PLAN = 1600000; const TEAM_SUPER = 2500000; const TEAM_MEGA = 3500000;
+
+        let isBattleMode = false;
+        let globalShifts = []; // Для хранения графика из таблицы
+        let salesCache = {};
+        let currentFullData = null;
+
+        function closeModal(id) {
+            if (id) {
+                document.getElementById(id).style.display = 'none';
+            } else {
+                // Если вызвано без ID, закрываем окно предсказаний
+                document.getElementById('predict-modal').style.display = 'none';
+            }
+        }
+        
+        function showSchedule() {
+            const user = localStorage.getItem('mone_current_user'); 
+            const display = document.getElementById('schedule-display');
+            const myShifts = globalShifts.filter(s => String(s[1]).toLowerCase() === String(user).toLowerCase());
+            display.innerHTML = myShifts.map(s => `<div>✅ ${s[0]}</div>`).join('');
+        }
+
+        try {
+            const savedCache = localStorage.getItem('mone_sales_cache');
+            if (savedCache) { salesCache = JSON.parse(savedCache); }
+            const savedData = localStorage.getItem('mone_last_full_data');
+            if (savedData) { currentFullData = JSON.parse(savedData); }
+        } catch (e) { console.log("Не удалось загрузить кэш", e); }
+
+        const fallbackData = [
+            { "id": "lena", "name": "Лена", "shifts_done": "10", "sales_sum": "456380", "shift_avg": "38000", "shifts_left": "5", "orders_count": "18" },
+            { "id": "polina", "name": "Полина", "shifts_done": "12", "sales_sum": "376170", "shift_avg": "31347", "shifts_left": "3", "orders_count": "14" },
+            { "id": "ksenia", "name": "Ксения (Стажер)", "shifts_done": "4", "sales_sum": "120000", "shift_avg": "30000", "shifts_left": "5", "orders_count": "5" },
+            { "id": "dasha", "name": "Даша (Стажер)", "shifts_done": "3", "sales_sum": "95000", "shift_avg": "31666", "shifts_left": "6", "orders_count": "4" },
+            { "id": "polina2", "name": "Полина К. (Архив)", "shifts_done": "5", "sales_sum": "150000", "shift_avg": "30000", "shifts_left": "0", "orders_count": "6" },
+            { "id": "guzel", "name": "Гузель (Архив)", "shifts_done": "4", "sales_sum": "110000", "shift_avg": "27500", "shifts_left": "0", "orders_count": "4" }
+        ];
+
+        const predictions = [
+            "Сегодня идеальный день для закрытия крупного чека. Клиент уже согласен!",
+            "Твоя улыбка продает лучше любой презентации. Действуй!",
+            "Продажи сегодня будут ложиться на холст так же легко, как мазки у Клода Моне.",
+            "Кто-то сегодня продвинется к Мегаплану семимильными шагами. Спойлер: это ты!",
+            "Интуиция подсказывает, что следующий звонок принесет студии супер-заказ.",
+            "Сделай глубокий вдох. Сегодня ты — королева тайм-менеджмента и закрытия сделок!",
+            "Твоя энергия заряжает весь отдел! Включай режим 'Машина Продаж'.",
+            "Один лояльный клиент сегодня приведет за собой еще троих. Будь наготове!",
+            "Прекрасный день для личного рекорда выручки в смену. Ты можешь!"
+        ];
+
+        const positivePhrases = [
+            "Красотка! Ура! 🎉", "Мощный мазок на холст кассы! 🎨", "Машина продаж запущена! 🚀",
+            "Вот это темп! 🔥", "Клиенты в восторге, студия в плюсе! 💎", "Уверенно идёт к Мегаплану! 🪐"
+        ];
+
+        function toggleFactionBattle() {
+            isBattleMode = !isBattleMode;
+            const btn = document.getElementById('btn-toggle-battle');
+            if(isBattleMode) {
+                btn.classList.add('active');
+                btn.innerText = "⭐ Обычный режим";
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = "⚔️ Битва Фракций";
+            }
+            if (currentFullData) { renderDashboard(currentFullData); } else { loadDataFromGoogle(); }
+        }
+
+        function updateCosmicBackground(totalSales) {
+            let bgString = "linear-gradient(135deg, #0F172A 0%, #090D16 100%)";
+            if (totalSales >= TEAM_MEGA) {
+                bgString = "linear-gradient(135deg, #1E1B4B 0%, #311042 50%, #0F051D 100%)";
+                document.body.style.boxShadow = "inset 0 0 100px rgba(168, 85, 247, 0.2)";
+            } else if (totalSales >= TEAM_SUPER) {
+                bgString = "linear-gradient(135deg, #0F172A 0%, #2E1065 70%, #090514 100%)";
+            } else if (totalSales >= TEAM_PLAN) {
+                bgString = "linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #1E1B4B 100%)";
+            }
+            document.body.style.background = bgString;
+            document.body.style.backgroundAttachment = "fixed";
+        }
+
+        function showAchievementToast(name, deltaSum) {
+            const container = document.getElementById('achievement-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'achievement-toast';
+            const randomPhrase = positivePhrases[Math.floor(Math.random() * positivePhrases.length)];
+            toast.innerHTML = `
+                <div class="toast-icon">💰</div>
+                <div>
+                    <div style="color: var(--color-plan); font-size: 16px; font-weight: 800;">${name} +${deltaSum.toLocaleString()} ₽!</div>
+                    <div style="font-size: 12px; color: var(--text-sec); margin-top: 2px;">${randomPhrase}</div>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('fade-out'); }, 5500);
+            setTimeout(() => { toast.remove(); }, 6000);
+        }
+
+        function playSuccessSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                let osc1 = ctx.createOscillator(); let gain1 = ctx.createGain();
+                osc1.type = 'sine'; osc1.frequency.setValueAtTime(280, ctx.currentTime);
+                osc1.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.8);
+                gain1.gain.setValueAtTime(0.4, ctx.currentTime); gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+                osc1.connect(gain1); gain1.connect(ctx.destination);
+                setTimeout(() => {
+                    let osc2 = ctx.createOscillator(); let gain2 = ctx.createGain();
+                    osc2.type = 'triangle'; osc2.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc2.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08);
+                    gain2.gain.setValueAtTime(0.3, ctx.currentTime); gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                    osc2.connect(gain2); gain2.connect(ctx.destination);
+                    osc2.start(); osc2.stop(ctx.currentTime + 0.5);
+                }, 50);
+                osc1.start(); osc1.stop(ctx.currentTime + 0.8);
+            } catch (e) { console.log(e); }
+        }
+
+        function log(msg, isError = false) {
+            const logger = document.getElementById('status-logger');
+            if (logger) {
+                const color = isError ? '#F87171' : '#34D399';
+                logger.innerHTML += `<div style="color: ${color}">[${new Date().toLocaleTimeString()}]: ${msg}</div>`;
+            }
+        }
+
+        function getVal(obj, key) {
+            if (!obj) return 0;
+            const t = key.toLowerCase().trim();
+            for (let k in obj) { if (k.toLowerCase().trim() === t) return obj[k]; }
+            return 0;
+        }
+
+        function localFireworks() {
+            for(let i=0; i<35; i++) {
+                let d = document.createElement('div'); d.style.position = 'fixed';
+                d.style.width = '10px'; d.style.height = '10px'; d.style.borderRadius = '50%';
+                d.style.backgroundColor = ['#34D399','#FBBF24','#A855F7','#38BDF8','#F97316'][Math.floor(Math.random()*5)];
+                d.style.left = Math.random() * window.innerWidth + 'px'; d.style.top = window.innerHeight + 'px';
+                d.style.zIndex = '9999'; d.style.transition = 'all 1.6s cubic-bezier(0.1, 0.8, 0.2, 1)';
+                document.body.appendChild(d);
+                setTimeout(() => {
+                    d.style.transform = `translate(${(Math.random()-0.5)*350}px, -${Math.random()*600 + 200}px) scale(1.6)`;
+                    d.style.opacity = '0';
+                }, 40);
+                setTimeout(() => d.remove(), 1700);
+            }
+        }
+
+        async function loadDataFromGoogle() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // Увеличил время до 8 сек, так как скрипт Google думает дольше
+            try {
+                // Заменяем сложную логику на прямой запрос к вашему Apps Script
+                const SCRIPT_URL = "ВАША_ССЫЛКА_ЗДЕСЬ_ЗАКАНЧИВАЕТСЯ_НА_/exec"; 
+                const response = await fetch(SCRIPT_URL, { signal: controller.signal });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error("Ошибка сервера: " + response.status);
+                
+                const result = await response.json(); 
+                
+                // Данные теперь приходят в формате {data: [...], shifts: [...]}
+                globalShifts = result.shifts || []; 
+                const rows = result.data; 
+
+                if (rows && Array.isArray(rows) && rows.length > 0) { 
+                    currentFullData = rows;
+                    try { localStorage.setItem('mone_last_full_data', JSON.stringify(rows)); } catch(e){}
+                    renderDashboard(rows); 
+                } else { 
+                    throw new Error("Массив данных пуст"); 
+                }
+            } catch (err) {
+                clearTimeout(timeoutId);
+                log("Ошибка загрузки. Автономный режим.", true);
+                if (currentFullData) { renderDashboard(currentFullData); } 
+                else { renderDashboard(fallbackData); }
+            }
+        }
+
+        function calculateProgress(value, p1, p2, p3) {
+            let pct = 0;
+            if (value <= p1) pct = (value / p1) * 33.33;
+            else if (value <= p2) pct = 33.33 + ((value - p1) / (p2 - p1)) * 33.33;
+            else pct = 66.66 + ((value - p2) / (p3 - p2)) * 33.34;
+            return Math.min(Math.round(pct), 100);
+        }
+
+        function createCardElement(m) {
+            const name = String(getVal(m, 'name') || getVal(m, 'id') || 'Менеджер');
+            const sales = Number(getVal(m, 'sales_sum')) || 0;
+            const shiftsLeft = Number(getVal(m, 'shifts_left')) || 0;
+            const shiftsDone = Number(getVal(m, 'shifts_done')) || 0;
+            const shiftAvg = Number(getVal(m, 'shift_avg')) || 0;
+            const ordersCount = Number(getVal(m, 'orders_count')) || 0;
+
+            const mId = String(getVal(m, 'id')).toLowerCase().trim();
+            const mSlug = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '');
+            const avgOrderCheck = ordersCount > 0 ? Math.round(sales / ordersCount) : 0;
+            
+            const totalShiftsInMonth = shiftsDone + shiftsLeft;
+
+            // ОПРЕДЕЛЕНИЕ СТАТУСА СТАЖЕРА
+            const isIntern = (mId === 'ksenia' || mId === 'dasha');
+
+            // ДИНАМИЧЕСКИЙ РАСЧЕТ ПЛАНА (ПРОПОРЦИОНАЛЬНО СМЕНАМ ДЛЯ СТАЖЕРОВ)
+            let currentGoalPlan = GOAL_PLAN;
+            let currentGoalSuper = GOAL_SUPER;
+            let currentGoalMega = GOAL_MEGA;
+
+            if (isIntern && totalShiftsInMonth > 0 && totalShiftsInMonth < BASE_SHIFTS_NORM) {
+                const coefficient = totalShiftsInMonth / BASE_SHIFTS_NORM;
+                currentGoalPlan = Math.round(GOAL_PLAN * coefficient);
+                currentGoalSuper = Math.round(GOAL_SUPER * coefficient);
+                currentGoalMega = Math.round(GOAL_MEGA * coefficient);
+            }
+
+            let rankText = isIntern ? "🎓 Академия Моне (Стажер)" : "Ученик Моне"; 
+            let rankColor = isIntern ? "#6366F1" : "var(--text-sec)"; 
+            let cls = "";
+
+            if (sales >= currentGoalMega) { 
+                rankText = isIntern ? "🌟 Звездный Стажер Моне" : "🪐 Муза Арт-Вселенной"; 
+                rankColor = "var(--color-mega)"; 
+                cls = "status-mega"; 
+            } else if (sales >= currentGoalSuper) { 
+                rankText = isIntern ? "🚀 Прорыв Академии" : "🚀 Космический Леонардо"; 
+                rankColor = "var(--color-super)"; 
+                cls = "status-super"; 
+            } else if (sales >= currentGoalPlan) { 
+                rankText = isIntern ? "📈 План Академии Взят" : "👑 Ван Гог отдела"; 
+                rankColor = "var(--color-plan)"; 
+                cls = "status-plan"; 
+            } else if (sales >= 150000 && !isIntern) { 
+                rankText = "Мастер штриха"; 
+                rankColor = "var(--vk-blue)"; 
+            }
+
+            const progressPct = calculateProgress(sales, currentGoalPlan, currentGoalSuper, currentGoalMega);
+            const isHot = shiftAvg >= 38000 ? 'on-fire' : '';
+            const fireEmoji = shiftAvg >= 38000 ? '🔥' : '';
+
+            let targetText = `До плана: <b>${(currentGoalPlan - sales).toLocaleString()} ₽</b>`;
+            if (sales >= currentGoalPlan && sales < currentGoalSuper) targetText = `🎉 План взят! До Суперплана: <b>${(currentGoalSuper - sales).toLocaleString()} ₽</b>`;
+            else if (sales >= currentGoalSuper && sales < currentGoalMega) targetText = `🚀 Суперплан взят! До Мегаплана: <b>${(currentGoalMega - sales).toLocaleString()} ₽</b>`;
+            else if (sales >= currentGoalMega) targetText = `🪐 МЕГАПЛАН ВЫПОЛНЕН!`;
+
+            const predictedSales = totalShiftsInMonth > 0 ? Math.round(shiftAvg * totalShiftsInMonth) : sales;
+            
+            let tempoStatusHtml = "";
+            if (predictedSales >= currentGoalMega) tempoStatusHtml = `<span style="color: var(--color-mega); font-weight:700;">🪐 Идёт на МЕГАПЛАН (${predictedSales.toLocaleString()} ₽)!</span>`;
+            else if (predictedSales >= currentGoalSuper) tempoStatusHtml = `<span style="color: var(--color-super); font-weight:700;">🚀 Идёт на СУПЕРПЛАН (${predictedSales.toLocaleString()} ₽)!</span>`;
+            else if (predictedSales >= currentGoalPlan) tempoStatusHtml = `<span style="color: var(--color-plan); font-weight:700;">📈 Выполнит личный план (${predictedSales.toLocaleString()} ₽)</span>`;
+            else tempoStatusHtml = `<span style="color: var(--color-alert); font-weight:700;">⚠️ Прогноз: ${predictedSales.toLocaleString()} ₽ (ускориться!)</span>`;
+
+            const div = document.createElement('div');
+            div.className = `m-card ${cls} ${isHot}`;
+            // Внутри createCardElement перед созданием div:
+            const todayStr = new Date().toLocaleDateString('ru-RU');
+            const myShifts = globalShifts.filter(s => String(s[1]).toLowerCase() === mId);
+            const isOnline = myShifts.some(s => s[0] === todayStr);
+            const remaining = myShifts.filter(s => {
+                const [d, mon, y] = s[0].split('.');
+                return new Date(y, mon-1, d) >= new Date().setHours(0,0,0,0);
+            }).length;
+
+            // Внутри template-строки div.innerHTML добавьте:
+            // ${isOnline ? '<span style="color:#10B981; font-weight:800; font-size:12px;">● ONLINE</span>' : ''}
+            // И замените блок метрики смен на:
+            // <div class="metric-box">
+            //    <div class="metric-title">Смены</div>
+            //    <div class="metric-value">${remaining} из ${myShifts.length}</div>
+            //    <span class="metric-sub">Осталось смен</span>
+            // </div>
+            div.innerHTML = `
+                <div class="m-header">
+                    <div>
+                        <h2 style="margin:0 0 4px 0; font-size:24px;">
+                            ${fireEmoji} ${name} ${isOnline ? '<span style="color:#10B981; font-weight:800; font-size:12px;">● ONLINE</span>' : ''}
+                        </h2>
+                        <span class="${isIntern ? 'badge-intern' : 'badge-rank'}" style="color:${rankColor}; border-color:${rankColor};">${rankText}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="sales-sum" style="color:${rankColor}">${sales.toLocaleString()} ₽</div>
+                        <div style="font-size:11px; color:var(--text-sec); margin-top:4px;">Текущий объем продаж</div>
+                    </div>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="goals-labels">
+                        <span>0 ₽</span>
+                        <span style="color:var(--color-plan); font-weight:${sales>=currentGoalPlan?'700':'400'}">План (${Math.round(currentGoalPlan/1000)}к)</span>
+                        <span style="color:var(--color-super); font-weight:${sales>=currentGoalSuper?'700':'400'}">Супер (${Math.round(currentGoalSuper/1000)}к)</span>
+                        <span style="color:var(--color-mega); font-weight:${sales>=currentGoalMega?'700':'400'}">Мега (${Math.round(currentGoalMega/1000)}к)</span>
+                    </div>
+                    <div class="bar-wrapper">
+                        <div class="grid-line grid-line-plan"></div>
+                        <div class="grid-line grid-line-super"></div>
+                        <div class="bar-progress-line" style="width: ${progressPct}%;"></div>
+                    </div>
+                </div>
+
+                <div class="target-status-box"><span>🎯 Ориентир:</span><span>${targetText}</span></div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-title">Смены</div>
+                        <div class="metric-value">${remaining} из ${myShifts.length}</div>
+                        <span class="metric-sub">Осталось смен</span>
+                    </div>
+                    <div class="metric-box" style="${isHot ? 'border-color: #F97316;' : ''}">
+                        <div class="metric-title">Выручка в смену</div>
+                        <div class="metric-value" style="color: var(--color-plan)">${shiftAvg.toLocaleString()} ₽</div>
+                        <span class="metric-sub">Цель: 38к+ 🔥</span>
+                    </div>
+                    <div class="metric-box" style="border-color: #38BDF8;">
+                        <div class="metric-title" style="color: #38BDF8;">Заказы</div>
+                        <div class="metric-value" style="color: #38BDF8;">📦 ${ordersCount}</div>
+                        <span class="metric-sub">Чек: ${avgOrderCheck.toLocaleString()} ₽</span>
+                    </div>
+                    
+                    <div class="metric-box" style="grid-column: span 3; display:flex; justify-content:space-between; align-items:center; text-align:left; padding: 12px 16px;">
+                        <div class="metric-title" style="margin-bottom:0;">Прогноз:</div>
+                        <div class="metric-value" style="font-size:13px;">${tempoStatusHtml}</div>
+                    </div>
+                    <div class="metric-box" style="grid-column: span 3; background:#131F33; display:flex; justify-content:space-between; align-items:center; text-align:left; padding: 12px 16px; border-color:#334155;">
+                        <div class="metric-title" style="margin-bottom:0; color:#38BDF8; font-weight:700;">Позиция:</div>
+                        <div class="metric-value" style="font-size:15px; color:#FFF;" data-position-slug="${mSlug}">-</div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function renderDashboard(data) {
+            try {
+                const grid = document.getElementById('dashboard-grid');
+                const leftSlots = document.getElementById('faction-left-slots');
+                const rightSlots = document.getElementById('faction-right-slots');
+                
+                grid.innerHTML = '';
+                leftSlots.innerHTML = '';
+                rightSlots.innerHTML = '';
+
+                let totalTeamSales = 0;
+                let leftFactionSales = 0;
+                let rightFactionSales = 0;
+                let anyNewSalesDetected = false;
+
+                const validManagers = data.filter(m => getVal(m, 'name') || getVal(m, 'id'));
+
+                // Фильтруем только активный персонал для вывода карточек (скрываем polina2 и guzel)
+                const activeManagers = validManagers.filter(m => {
+                    const id = String(getVal(m, 'id')).toLowerCase().trim();
+                    return (id !== 'polina2' && id !== 'guzel');
+                });
+
+                validManagers.forEach(m => {
+                    const name = String(getVal(m, 'name') || getVal(m, 'id') || 'Менеджер');
+                    const sales = Number(getVal(m, 'sales_sum')) || 0;
+                    mId = String(getVal(m, 'id')).toLowerCase().trim();
+                    const mSlug = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '');
+
+                    if (salesCache[mSlug] !== undefined && sales > salesCache[mSlug]) {
+                        const delta = sales - salesCache[mSlug];
+                        anyNewSalesDetected = true;
+                        showAchievementToast(name, delta);
+                    }
+                    salesCache[mSlug] = sales;
+                    
+                    // Общая сумма считается ПОЛНОСТЬЮ, включая polina2 и guzel
+                    totalTeamSales += sales;
+
+                    // Во фракции ушедшие менеджеры тоже не отрисовываются на доске, чтобы не засорять экран
+                    if (mId === 'lena' || mId === 'ksenia') { leftFactionSales += sales; } 
+                    else if (mId === 'polina' || mId === 'dasha') { rightFactionSales += sales; }
+                });
+
+                // Отрисовываем карточки ТОЛЬКО для активных сотрудников
+                activeManagers.forEach(m => {
+                    mId = String(getVal(m, 'id')).toLowerCase().trim();
+                    
+                    const mainGridCard = createCardElement(m);
+                    grid.appendChild(mainGridCard);
+
+                    const factionCard = createCardElement(m);
+                    if (mId === 'lena' || mId === 'ksenia') { leftSlots.appendChild(factionCard); } 
+                    else if (mId === 'polina' || mId === 'dasha') { rightSlots.appendChild(factionCard); }
+                });
+
+                localStorage.setItem('mone_sales_cache', JSON.stringify(salesCache));
+                updateCosmicBackground(totalTeamSales);
+
+                const totalFactionSum = leftFactionSales + rightFactionSales;
+                if(totalFactionSum > 0) {
+                    const leftPct = (leftFactionSales / totalFactionSum) * 100;
+                    const rightPct = (rightFactionSales / totalFactionSum) * 100;
+                    document.getElementById('arena-bar-left').style.width = `${leftPct}%`;
+                    document.getElementById('arena-bar-right').style.width = `${rightPct}%`;
+                }
+                document.getElementById('arena-bar-left').innerText = `${leftFactionSales.toLocaleString()} ₽`;
+                document.getElementById('arena-bar-right').innerText = `${rightFactionSales.toLocaleString()} ₽`;
+                document.getElementById('score-left').innerText = `${leftFactionSales.toLocaleString()} ₽`;
+                document.getElementById('score-right').innerText = `${rightFactionSales.toLocaleString()} ₽`;
+
+                if(isBattleMode) {
+                    document.getElementById('battle-arena').style.display = 'block';
+                    document.getElementById('dashboard-grid').style.display = 'none';
+                } else {
+                    document.getElementById('battle-arena').style.display = 'none';
+                    document.getElementById('dashboard-grid').style.display = 'grid';
+                }
+
+                document.getElementById('lbl-team-sum').innerText = `${totalTeamSales.toLocaleString()} ₽`;
+                const teamPct = calculateProgress(totalTeamSales, TEAM_PLAN, TEAM_SUPER, TEAM_MEGA);
+                document.getElementById('bar-team-progress').style.width = `${teamPct}%`;
+
+                let teamStatus = `До общего плана осталось собраться: <b>${(TEAM_PLAN - totalTeamSales).toLocaleString()} ₽</b> 💪`;
+                if (totalTeamSales >= TEAM_PLAN) teamStatus = `🎉 ОБЩИЙ ПЛАН ВЗЯТ! До Суперплана: <b>${(TEAM_SUPER - totalTeamSales).toLocaleString()} ₽</b> 🚀`;
+                if (totalTeamSales >= TEAM_SUPER) teamStatus = `🔥 СУПЕРПЛАН ВЗЯТ! До МЕГАПЛАНА: <b>${(TEAM_MEGA - totalTeamSales).toLocaleString()} ₽</b> 🪐`;
+                document.getElementById('lbl-team-status').innerHTML = teamStatus;
+
+                // Заполнение мест на пьедестале (только среди активных сотрудников)
+                const sortedActive = [...activeManagers].sort((a,b) => Number(getVal(b, 'sales_sum')) - Number(getVal(a, 'sales_sum')));
+                sortedActive.forEach((item, idx) => {
+                    const slug = String(getVal(item, 'name') || getVal(item, 'id')).replace(/[^a-zA-Zа-яА-Я0-9]/g, '');
+                    const elList = document.querySelectorAll(`[data-position-slug="${slug}"]`);
+                    elList.forEach(el => {
+                        const medals = ['🥇 Лидер продаж (1 место)', '🥈 Претендент (2 место)', '🥉 На высоте (3 место)', '🔹 Шаг до пьедестала (4 место)'];
+                        el.innerText = medals[idx] || `${idx + 1} место`;
+                    });
+                });
+
+                if (anyNewSalesDetected) { playSuccessSound(); localFireworks(); }
+                document.getElementById('loader-screen').style.display = 'none';
+            } catch(e) { console.log(e); }
+        }
+
+        function triggerRefresh() {
+            document.getElementById('loader-screen').style.display = 'block';
+            document.getElementById('dashboard-grid').style.display = 'none';
+            document.getElementById('battle-arena').style.display = 'none';
+            loadDataFromGoogle();
+        }
+
+        function showPrediction() {
+            const r = Math.floor(Math.random() * predictions.length);
+            document.getElementById('predict-content').innerText = predictions[r];
+            document.getElementById('predict-modal').style.display = 'flex';
+        }
+        function closeModal(id) {
+            if (id) {
+                document.getElementById(id).style.display = 'none';
+            } else {
+                 // Если ID не передали (вызов из кнопки предсказания), закрываем по умолчанию
+                document.getElementById('predict-modal').style.display = 'none';
+            }
+        }
+
+        setInterval(loadDataFromGoogle, 60000);
+        loadDataFromGoogle();
+        
+
+        
+    </script>
+    <div class="modal-overlay" id="lk-modal" style="display:none;" onclick="closeModal('lk-modal')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0;">Личный кабинет</h3>
+            <button class="btn" onclick="showSchedule()">📅 Показать мой график</button>
+            <div id="schedule-display" style="margin-top:15px; text-align:left; max-height:200px; overflow-y:auto;"></div>
+            <br><br>
+            <button class="btn" onclick="closeModal('lk-modal')">Закрыть</button>
+        </div>
+    </div>
+</body>
+</html>
