@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Арт-Студия Моне — Панель Управления</title>
+    <title>Арт-Студия Моне — Панель Управления v4.0</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+
     <style>
         :root {
             --bg-dark: #0F172A; --bg-card: #1E293B; --text-main: #F8FAFC; --text-sec: #94A3B8;
@@ -11,6 +14,7 @@
             --color-alert: #F87171; --space-bg: linear-gradient(135deg, #0F172A 0%, #090D16 100%);
         }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--space-bg); color: var(--text-main); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
         .card { background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid #334155; position: relative; }
         .btn { background: var(--vk-blue); border: none; padding: 12px; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
@@ -22,14 +26,14 @@
 </head>
 <body>
 
-<div id="loader-screen" class="loader-screen"><h2>Загрузка...</h2></div>
+<div id="loader-screen" class="loader-screen"><h2>Загрузка данных...</h2></div>
 
 <div class="container">
     <h1>🎨 Арт-Студия Моне</h1>
     
     <div id="battle-arena" class="card" style="text-align:center; margin-bottom: 20px;">
         <h3>Битва за Мега-план</h3>
-        <div id="lbl-team-status">Обновление данных...</div>
+        <div id="lbl-team-status">Подключаюсь к таблице...</div>
     </div>
 
     <div id="dashboard-grid" class="grid"></div>
@@ -39,11 +43,11 @@
 
 <div class="modal-overlay" id="lk-modal" onclick="closeModal('lk-modal')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <h3>Личный кабинет</h3>
+        <h3>Добавить сделку</h3>
         <input type="hidden" id="input-m-id">
         <input type="text" id="input-order" placeholder="Номер заказа">
         <input type="number" id="input-amount" placeholder="Сумма">
-        <button class="btn" onclick="submitData()">Отправить заказ</button>
+        <button class="btn" onclick="submitData()">Отправить</button>
         <button class="btn" style="background:#64748B; color:white;" onclick="closeModal('lk-modal')">Закрыть</button>
     </div>
 </div>
@@ -57,8 +61,8 @@
 </div>
 
 <script>
-    // --- 1. ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXXjSLoclGShalILv99JPSMFTuuXHNVnWaZ2HUIdYRUnL11PGMHqnF461BTzIFRj57qw/exec";
+    // --- ВСТАВЬ СВОЙ URL ---
+    const SCRIPT_URL = "ВАШ_SCRIPT_URL_СЮДА";
     const predictions = ["Сегодня твой день!", "Средний чек взлетит!", "Клиенты будут в восторге", "Ты — топ менеджер!", "Удача на твоей стороне"];
 
     async function loadDataFromGoogle() {
@@ -78,25 +82,25 @@
 
         managers.forEach((m, i) => {
             totalSales += m.sales;
-            const medal = ['🥇 Лидер продаж', '🥈 Претендент', '🥉 На высоте'][i] || `${i+1} место`;
+            // Использование логики медалей из 2.8
+            const medals = ['🥇 Лидер продаж (1 место)', '🥈 Претендент (2 место)', '🥉 На высоте (3 место)', '🔹 Шаг до пьедестала'];
+            const medalText = medals[i] || `${i + 1} место`;
             
             grid.innerHTML += `
                 <div class="card">
                     <h3>${m.id} ${m.isOnline ? '<span style="color:#34D399; font-size:0.7em;">● Online</span>' : ''}</h3>
-                    <p style="color:var(--vk-blue); font-weight:bold;">${medal}</p>
+                    <p style="color:var(--vk-blue); font-weight:bold; font-size:0.9em;" id="p-${m.id.replace(/[^a-zA-Zа-яА-Я0-9]/g, '')}">${medalText}</p>
                     <p>Выручка: <b>${m.sales.toLocaleString()} ₽</b></p>
                     <div style="background:#0F172A; height:8px; border-radius:4px; margin:10px 0;">
                         <div style="background:var(--vk-blue); width:${Math.min(100, (m.sales/m.mega)*100)}%; height:100%; border-radius:4px;"></div>
                     </div>
-                    <button class="btn" onclick="openModal('${m.id}')">Добавить заказ</button>
+                    <button class="btn" onclick="openModal('${m.id}')">Кабинет</button>
                 </div>
             `;
         });
 
-        // Team Status
-        document.getElementById('lbl-team-status').innerHTML = `Командная выручка: <b>${totalSales.toLocaleString()} ₽</b>`;
+        document.getElementById('lbl-team-status').innerHTML = `Общая выручка команды: <b>${totalSales.toLocaleString()} ₽</b>`;
         document.getElementById('loader-screen').style.display = 'none';
-        document.getElementById('dashboard-grid').style.display = 'grid';
     }
 
     function openModal(id) {
@@ -118,7 +122,7 @@
             type: 'Sale'
         };
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        alert('Данные отправлены!');
+        alert('Заказ отправлен!');
         closeModal('lk-modal');
         loadDataFromGoogle();
     }
